@@ -1,0 +1,90 @@
+<launch>
+
+	<!-- Constants -->
+	<param name="MAX_FORCE" type="double" value="45"/>
+	<param name="CRITICAL_FORCE" type="double" value="52"/>
+	<param name="FORCE_ACCURACY" type="double" value="0.1"/>
+	<param name="PID_DELTA_LIMIT" type="double" value="200"/>
+	<param name="FORCE_ACCURACY" type="double" value="0.1"/>
+	<param name="NODE_RATE" type="double" value="250"/>	
+	<param name="GRIP_FORCE" type="double" value="10"/>
+	<param name="GRIP_STEP" type="double" value="1"/> 
+	<param name="EXP_NUM" type="string" value="10" />
+
+	<!-- Paths -->
+	<param name="save_path" type="string" value="/home/rob/data/fric_est_3/teabox_375"/>
+	<param name="object_type" type="string" value="teabox"/>
+	<param name="object_weight" type="double" value="0.375"/>
+	<param name="object_distance" type="double" value="0.00"/> 
+
+	<node pkg="papillarray_ros_v2"
+	      name="papillarray_ros_v2_node"
+	      type="papillarray_ros_v2_node"
+		  required="true"
+		  output="screen"
+		  launch-prefix="xterm -e">
+
+		<param name="hub_id" type="int" value="0"/>
+
+		<!-- Sensor setup parameters -->
+
+			<!-- Number of sensors being used. Value can be 1 or 2 -->
+			<param name="n_sensors" type="int" value="2"/>
+			
+		<!-- COM port setup -->
+
+			<!-- Name of COM port to connect with -->
+			<param name="com_port" type="string" value="/dev/ttyACM0"/>
+			<!-- Rate of serial connection -->
+			<param name="baud_rate" type="int" value="9600"/>
+			<!-- Parity: 0=PARITY_NONE, 1=PARITY_ODD, 2=PARITY_EVEN -->
+			<param name="parity" type="int" value="0"/>
+			<!-- Number of bits in byte. Default 8 -->
+			<param name="byte_size" type="int" value="8"/>
+
+		<!-- Read behaviour -->
+
+			<!-- Flushing flag: flush hardware input buffer when it contains too many bytes -->
+			<param name="is_flush" type="bool" value="true"/>
+
+		<!-- Sample Rate --> 
+
+			<!-- Rate (Hz): 100, 250, 500 or 1000 -->
+			<param name="sampling_rate" type="int" value="250"/>
+
+	</node>
+    <node name="ucd_robot_node" pkg="ucd_robot" type="ucd_robot_node.py" output="screen" required="true"></node>    
+    <node name="camera_node" pkg="ucd_robot" type="camera_node.py" output="screen" respawn="true"></node>
+    <node name="gripper_node" pkg="gripper" type="gripper_node.py" output="screen" respawn="true"></node>
+    <node name="pid_node" pkg="gripper" type="pid_node.py" output="screen" respawn="true"></node>    
+    <node name="robot_node" pkg="robot" type="robot_node.py" output="screen" required="true"></node>    
+    <!-- <node name="grip_force_protocol" pkg="gripper" type="grip_force_protocol.py" output="screen" required="true"></node> -->
+
+	<arg name="debug" default="true" doc="Debug flag that will get passed on to ur_common.launch"/>
+	<arg name="robot_ip" value="192.168.75.100" doc="IP address by which the robot can be reached."/>
+	<arg name="reverse_ip" default="" doc="IP of the driver, if set to empty it will detect it automatically."/>
+	<arg name="reverse_port" default="50001" doc="Port that will be opened by the driver to allow direct communication between the driver and the robot controller."/>
+	<arg name="script_sender_port" default="50002" doc="The driver will offer an interface to receive the program's URScript on this port. If the robot cannot connect to this port, `External Control` will stop immediately."/>
+	<arg name="trajectory_port" default="50003" doc="Port that will be opened by the driver to allow trajectory forwarding."/>
+	<arg name="script_command_port" default="50004" doc="Port that will be opened by the driver to allow forwarding script commands to the robot."/>
+	<arg name="tf_prefix" default="" doc="tf_prefix used for the robot."/>
+	<arg name="controllers" default="joint_state_controller scaled_pos_joint_traj_controller speed_scaling_state_controller force_torque_sensor_controller" doc="Controllers that are activated by default."/>
+	<arg name="stopped_controllers" default="pos_joint_traj_controller joint_group_vel_controller" doc="Controllers that are initally loaded, but not started."/>
+	<arg name="controller_config_file" default="$(find ur_robot_driver)/config/ur5e_controllers.yaml" doc="Config file used for defining the ROS-Control controllers."/>
+	<arg name="robot_description_file" default="$(find ur_description)/launch/load_ur5e.launch" doc="Robot description launch file."/>
+	<arg name="kinematics_config" default="/home/rob/UCD_robot_ws/src/Universal_Robots_ROS_Driver/ur_calibration/calib_files/ur5e_calib_20230207" doc="Kinematics config file used for calibration correction. This will be used to verify the robot's calibration is matching the robot_description."/>
+	<arg name="use_tool_communication" default="false" doc="On e-Series robots tool communication can be enabled with this argument"/>
+	<arg name="tool_voltage" default="0" doc="Tool voltage set at the beginning of the UR program. Only used, when `use_tool_communication` is set to true."/>
+	<arg name="tool_parity" default="0" doc="Parity configuration used for tool communication. Only used, when `use_tool_communication` is set to true."/>
+	<arg name="tool_baud_rate" default="115200" doc="Baud rate used for tool communication. Only used, when `use_tool_communication` is set to true."/>
+	<arg name="tool_stop_bits" default="1" doc="Number of stop bits used for tool communication. Only used, when `use_tool_communication` is set to true."/>
+	<arg name="tool_rx_idle_chars" default="1.5" doc="Number of idle chars in RX channel used for tool communication. Only used, when `use_tool_communication` is set to true."/>
+	<arg name="tool_tx_idle_chars" default="3.5" doc="Number of idle chars in TX channel used for tool communication. Only used, when `use_tool_communication` is set to true."/>
+	<arg name="tool_device_name" default="/tmp/ttyUR" doc="Local device name used for tool communication. Only used, when `use_tool_communication` is set to true."/>
+	<arg name="tool_tcp_port" default="54321" doc="Port on which the robot controller publishes the tool comm interface. Only used, when `use_tool_communication` is set to true."/>
+	<arg name="headless_mode" default="false" doc="Automatically send URScript to robot to execute. On e-Series this does require the robot to be in 'remote-control' mode. With this, the URCap is not needed on the robot."/>
+	<arg name="ur_hardware_interface_node_required" default="true" doc="Shut down ros environment if ur_hardware_interface-node dies."/>
+
+	<include file="$(find ur_robot_driver)/launch/ur_common.launch" pass_all_args="true" /> 
+
+</launch>
