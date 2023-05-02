@@ -7,7 +7,7 @@ Catkin workspace for the UCD_robot
 | SDD  | 1TB  |
 | RAM | 8GB |
 | Linux Distribution | Ubuntu 20.04 Focal Fossa |
-| Kernel Version | 5.15-rt |
+| Kernel Version | 5.15.86-rt56 |
 | ROS Distribution | ROS 1 Noetic |
 
 ## Components
